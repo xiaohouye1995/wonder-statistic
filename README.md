@@ -50,7 +50,12 @@ window.webtracing.event(name, optionsObj)
     "system": "", // 系统
     "systemVs":" ", // 系统版本
     "screen": "" // 屏幕分辨率
-    },
-    "typeName":"" // 事件名
+  },
+  "location": {
+    "country": "", // 国家
+    "region":" ", // 省份
+    "city": "" // 城市
+  }
+  "typeName":"" // 事件名
 }
 ```

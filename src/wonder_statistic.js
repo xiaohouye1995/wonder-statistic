@@ -22,7 +22,35 @@ export class WonderStatistic {
       pagePath: window.location.pathname,
       deviceInfo: { ...this.getDeviceInfo() }
     }
-    this.event('pv')
+    this.getLocation()
+    // this.event('pv')
+  }
+  // 获取定位信息
+  getLocation() {
+    // navigator.geolocation.getCurrentPosition((res) => {
+    //   console.log(res);//这里会返回经纬度，然后还要通过经纬度转换地区名称
+    // });
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "https://get.geojs.io/v1/ip/geo.json");
+    xhr.send(null);
+    xhr.onload = () => {
+      console.log('xhr.status', xhr.status)
+      if (xhr.status != 200) {
+        this.event('pv')
+        return;
+      }
+      const location = JSON.parse(xhr.responseText)
+      // console.log('location', location)
+      this._options.location = {
+        country: location.country,
+        region: location.region,
+        city: location.city
+      }
+      this.event('pv')
+    };
+    xhr.onerror = () => {
+      this.event('pv')
+    }
   }
   // 获取设备信息
   getDeviceInfo() {

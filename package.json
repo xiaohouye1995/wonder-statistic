@@ -1,6 +1,6 @@
 {
   "name": "wonder-statistic",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "杭州网达埋点统计",
   "main": "index.js",
   "scripts": {
