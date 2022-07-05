@@ -36,7 +36,7 @@ window.webtracing.event(name, optionsObj)
 
 ### 参数
 返回参数-暂定
-```js
+```json
 {
   "appName": "", // 应用名
   "userId": "", // 用户标识
@@ -55,7 +55,10 @@ window.webtracing.event(name, optionsObj)
     "country": "", // 国家
     "region":" ", // 省份
     "city": "" // 城市
-  }
+  },
+  "eventInfo": {}, // 自定义事件对象
+  "pageTimeSrc": "", // 停留页面
+  "pageTime": "", // 停留时间
   "typeName":"" // 事件名
 }
 ```
