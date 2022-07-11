@@ -18,13 +18,9 @@ window.webtracing = new WonderStatistic()
 window.webtracing.init({
   requestUrl: 'http://xxxx/tracing', // 请求路径
   appName: 'xxx', // 应用名
+  eventCenter: eventCenter, // taro监听事件，可选
+  appType: 'taro', // 应用类型，可选
 })
-
-/**
- * 监听跳转路由
- * @param url 路由地址
- */
-window.webtracing.routingJump(url)
 
 /**
  * 自定义事件
@@ -41,6 +37,7 @@ window.webtracing.event(name, optionsObj)
   "appName": "", // 应用名
   "userId": "", // 用户标识
   "pagePath": "", // 页面路径
+  "source": "", // 访问来源
   "deviceInfo":{ // 设备信息
     "engine": "", // 浏览器内核
     "engineVs": "", // 浏览器内核版本

@@ -7,6 +7,7 @@ export class WonderStatistic {
       this.userId = this.uuid()
       localStorage.setItem('userId', this.userId)
     }
+    this.routerInit()
   }
   /**
    * 初始化配置
@@ -21,61 +22,105 @@ export class WonderStatistic {
       userId: this.userId,
       pagePath: window.location.pathname,
       location: {},
-      deviceInfo: { ...this.getDeviceInfo() }
+      deviceInfo: { ...this.getDeviceInfo() },
+      pageTimeSrc: '',
+      pageTime: ''
     }
     this.eventCenter = options.eventCenter || ''
     this.appType = options.appType || ''
+    this.getPageSource()
     this.getLocation()
+    this.getPageOut()
+    this.getPageBack()
     this.getPageTime()
-    // this.event('pv')
   }
-  // 获取页面停留时长
-  getPageTime() {
-    let timeStr = new Date().getTime()
-    let pageUrl = '/'
-    console.log('初始化时间' + timeStr)
-    let rewriteHis = function (type) {
+  // 监听路由初始化
+  routerInit() {
+    const rewriteHis = (type) => {
+      // 先将原函数存放起来
       let origin = window.history[type]
+      // 当window.history[type]函数被执行时，这个函数就会被执行
       return function () {
+        // 执行原函数
         let rs = origin.apply(this, arguments)
+        // 定义一个自定义事件
         let e = new Event(type.toLocaleLowerCase())
+        // 把默认参数，绑定到自定义事件上，new Event返回的结果，自身上是没有arguments的
         e.arguments = arguments
+        // 触发自定义事件，把载荷传给自定义事件
         window.dispatchEvent(e)
         return rs
       }
     }
-    const setTimeEvent = (name, path) => {
-      let t = new Date().getTime() - timeStr
-      timeStr = new Date().getTime()
-      const dateTime = this.formatTime(t)
-      console.log(`${pageUrl}页面待了时长${name}： ${dateTime}`)
+    window.history.pushState = rewriteHis('pushState')
+  }
+  // 获取页面来源
+  getPageSource() {
+    const source = this.getQueryVariable('source') || document.referrer
+    this._options.source = source || '直接打开'
+  }
+  // 获取url参数
+  getQueryVariable(variable) {
+    let query = window.location.search.substring(1)
+    let vars = query.split('&')
+    for (let i = 0; i < vars.length; i++) {
+      let pair = vars[i].split('=')
+      if (pair[0] === variable) {
+        return pair[1]
+      }
+    }
+    return ''
+  }
+  // 获取页面退出
+  getPageOut() {
+    const now = new Date().getTime()
+    // 从缓存中获取用户上次退出的时间戳
+    const leaveTime = parseInt(localStorage.getItem('leaveTime'), 10)
+    // 判断是否为退出，两次间隔大于5s判定为退出操作
+    const isOut = now - leaveTime > 5000
+    if (isOut) {
+      this.event('退出')
+    }
+  }
+  // 获取页面返回上一页
+  getPageBack() {
+    window.addEventListener('popstate', () => {
+      this.event('返回上一页')
+    })
+  }
+  // 获取页面停留时长
+  getPageTime() {
+    let tempTime = new Date().getTime()
+    let pageUrl = '/'
+    const setStayTimeEvent = (name, path) => {
+      let timeDiff = new Date().getTime() - tempTime
+      tempTime = new Date().getTime()
+      console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       pageUrl = path || document.location.pathname
-      this._options.pageTime = dateTime
+      this._options.pageTime = String(timeDiff)
       this.routingJump(pageUrl)
     }
-    window.history.pushState = rewriteHis('pushState')
-    window.history.replaceState = rewriteHis('replaceState')
-    // 监听页面刷新与退出
+    // 页面刷新或退出时上次停留时长
     window.onunload = () => {
-      setTimeEvent('onunload')
+      setStayTimeEvent('onunload')
+      // 记录离开时间，用以区分刷新和退出
+      localStorage.setItem('leaveTime', new Date().getTime())
     }
     if (this.appType === 'taro') {
       this.eventCenter.on('__taroRouterChange', ({ toLocation: { path } }) => {
-        if (JSON.stringify(this._options.location) === '{}') {
-          return
+        if (JSON.stringify(this._options.location) !== '{}') {
+          setStayTimeEvent('__taroRouterChange', path)
         }
-        setTimeEvent('__taroRouterChange', path)
       })
     } else {
+      // 监听页面后退
       window.addEventListener('popstate', () => {
-        setTimeEvent('popstate')
+        setStayTimeEvent('popstate')
       })
+      // 监听页面前进
       window.addEventListener('pushstate', () => {
-        setTimeEvent('pushstate')
-      })
-      window.addEventListener('hashchange', () => {
-        setTimeEvent('hashchange')
+        setStayTimeEvent('pushstate')
       })
     }
   }
@@ -276,17 +321,6 @@ export class WonderStatistic {
   routingJump(path) {
     this._options.pagePath = path
     this.event('pv')
-  }
-  // 毫秒转时分秒
-  formatTime(msTime) {
-    let time = msTime / 1000
-    let hour = Math.floor(time / 60 / 60)
-    hour = hour.toString().padStart(2, '0')
-    let minute = Math.floor(time / 60) % 60
-    minute = minute.toString().padStart(2, '0')
-    let second = Math.floor(time) % 60
-    second = second.toString().padStart(2, '0')
-    return `${hour}:${minute}:${second}`
   }
   // 获取一个随机字符串(全局唯一标识符)
   uuid() {
