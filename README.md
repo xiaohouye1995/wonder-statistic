@@ -23,6 +23,12 @@ window.webtracing.init({
 })
 
 /**
+ * 服务端用户登录
+ * @param token
+ */
+window.webtracing.login(token)
+
+/**
  * 自定义事件
  * @param name 事件名
  * @param optionsObj 事件参数
@@ -35,27 +41,18 @@ window.webtracing.event(name, optionsObj)
 ```json
 {
   "appName": "", // 应用名
-  "userId": "", // 用户标识
+  "distinctId": "", // 浏览器用户标识
   "pagePath": "", // 页面路径
   "source": "", // 访问来源
-  "deviceInfo":{ // 设备信息
-    "engine": "", // 浏览器内核
-    "engineVs": "", // 浏览器内核版本
-    "platform": "", // 平台
-    "supporter": "", // 浏览器
-    "supporterVs": "", // 浏览器版本
-    "system": "", // 系统
-    "systemVs":" ", // 系统版本
-    "screen": "" // 屏幕分辨率
-  },
-  "location": {
-    "country": "", // 国家
-    "region":" ", // 省份
-    "city": "" // 城市
-  },
+  "supporter": "", // 浏览器
+  "system": "", // 系统
+  "systemVs":" ", // 系统版本
+  "region":" ", // 省份
+  "city": "" ,// 城市
   "eventInfo": {}, // 自定义事件对象
   "pageTimeSrc": "", // 停留页面
   "pageTime": "", // 停留时间
-  "typeName":"" // 事件名
+  "eventType":"", // 事件名
+  "token": "" // 登录用户标识
 }
 ```

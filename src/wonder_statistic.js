@@ -1,11 +1,11 @@
 export class WonderStatistic {
   constructor() {
-    const id = localStorage.getItem('userId')
+    const id = localStorage.getItem('wonderStatisticBrowserId')
     if (id) {
-      this.userId = id
+      this.browserId = id
     } else {
-      this.userId = this.uuid()
-      localStorage.setItem('userId', this.userId)
+      this.browserId = this.uuid()
+      localStorage.setItem('wonderStatisticBrowserId', this.browserId)
     }
     this.routerInit()
   }
@@ -19,20 +19,32 @@ export class WonderStatistic {
     this.requestUrl = options.requestUrl || ''
     this._options = {
       appName: options.appName || '',
-      userId: this.userId,
+      eventType: '',
+      distinctId: this.browserId,
       pagePath: window.location.pathname,
-      location: {},
-      deviceInfo: { ...this.getDeviceInfo() },
-      pageTimeSrc: '',
-      pageTime: ''
+      region: '',
+      city: '',
+      // deviceInfo: { ...this.getDeviceInfo() },
+      pageTimeSrc: localStorage.getItem('wonderStatisticPageUrl') || '',
+      pageTime: this.calculateTheStayTime(),
+      // pageTimeSrc: '',
+      // pageTime: '',
+      token: localStorage.getItem('wonderStatisticToken') || '',
+      ...this.getDeviceInfo()
     }
     this.eventCenter = options.eventCenter || ''
     this.appType = options.appType || ''
+    this.getPageOut()
     this.getPageSource()
     this.getLocation()
-    this.getPageOut()
     this.getPageBack()
     this.getPageTime()
+  }
+  // 服务端用户登录
+  login(token) {
+    this._options.token = token
+    localStorage.setItem('wonderStatisticToken',token)
+    this.event('loginSuccess')
   }
   // 监听路由初始化
   routerInit() {
@@ -56,8 +68,15 @@ export class WonderStatistic {
   }
   // 获取页面来源
   getPageSource() {
-    const source = this.getQueryVariable('source') || document.referrer
-    this._options.source = source || '直接打开'
+    const source = localStorage.getItem('wonderStatisticSource')
+    if (source) {
+      this._options.source = source
+    } else {
+      this._options.source = this.getQueryVariable('source') || document.referrer || '直接打开'
+      localStorage.setItem('wonderStatisticSource', this._options.source)
+    }
+    // const source = this.getQueryVariable('source') || document.referrer
+    // this._options.source = source || '直接打开'
   }
   // 获取url参数
   getQueryVariable(variable) {
@@ -71,33 +90,56 @@ export class WonderStatistic {
     }
     return ''
   }
+  // 计算停留时间
+  calculateTheStayTime() {
+    const time = localStorage.getItem('wonderStatisticTime')
+    if (time) {
+      return new Date().getTime() - Number(time)
+    }
+    return ''
+  }
   // 获取页面退出
   getPageOut() {
     const now = new Date().getTime()
     // 从缓存中获取用户上次退出的时间戳
-    const leaveTime = parseInt(localStorage.getItem('leaveTime'), 10)
+    const leaveTime = parseInt(localStorage.getItem('wonderStatisticLeaveTime'), 10)
+    if (!leaveTime) {
+      return
+    }
     // 判断是否为退出，两次间隔大于5s判定为退出操作
     const isOut = now - leaveTime > 5000
     if (isOut) {
-      this.event('退出')
+      const url = localStorage.getItem('wonderStatisticPageUrl') || ''
+      this.send({ ...this._options, eventType: 'pageOut', pagePath: url })
+      localStorage.setItem('wonderStatisticSource', '')
+      localStorage.setItem('wonderStatisticTime', '')
+      localStorage.setItem('wonderStatisticPageUrl', '')
     }
   }
   // 获取页面返回上一页
   getPageBack() {
     window.addEventListener('popstate', () => {
-      this.event('返回上一页')
+      const url = localStorage.getItem('wonderStatisticPageUrl') || ''
+      this.send({ ...this._options, eventType: 'pageBack', pagePath: url })
     })
   }
   // 获取页面停留时长
   getPageTime() {
-    let tempTime = new Date().getTime()
+    // let tempTime = new Date().getTime()
+    let tempTime = localStorage.getItem('wonderStatisticTime')
+    if (!tempTime) {
+      tempTime = new Date().getTime()
+      localStorage.setItem('wonderStatisticTime', new Date().getTime())
+    }
     let pageUrl = '/'
     const setStayTimeEvent = (name, path) => {
       let timeDiff = new Date().getTime() - tempTime
       tempTime = new Date().getTime()
-      console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
+      localStorage.setItem('wonderStatisticTime', new Date().getTime())
+      // console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       pageUrl = path || document.location.pathname
+      localStorage.setItem('wonderStatisticPageUrl', pageUrl)
       this._options.pageTime = String(timeDiff)
       this.routingJump(pageUrl)
     }
@@ -105,11 +147,11 @@ export class WonderStatistic {
     window.onunload = () => {
       setStayTimeEvent('onunload')
       // 记录离开时间，用以区分刷新和退出
-      localStorage.setItem('leaveTime', new Date().getTime())
+      localStorage.setItem('wonderStatisticLeaveTime', new Date().getTime())
     }
     if (this.appType === 'taro') {
       this.eventCenter.on('__taroRouterChange', ({ toLocation: { path } }) => {
-        if (JSON.stringify(this._options.location) !== '{}') {
+        if (this._options.city) {
           setStayTimeEvent('__taroRouterChange', path)
         }
       })
@@ -139,11 +181,13 @@ export class WonderStatistic {
       }
       const location = JSON.parse(xhr.responseText)
       // console.log('location', location)
-      this._options.location = {
-        country: location.country,
-        region: location.region,
-        city: location.city
-      }
+      // this._options.location = {
+      //   country: location.country,
+      //   region: location.region,
+      //   city: location.city
+      // }
+      this._options.region = location.region
+      this._options.city = location.city
       this.event('pv')
     }
     xhr.onerror = () => {
@@ -204,12 +248,12 @@ export class WonderStatistic {
     }
 
     // 平台
-    let platform = 'unknow'
-    if (system === 'windows' || system === 'macos' || system === 'linux') {
-      platform = 'pc' // 桌面端
-    } else if (system === 'android' || system === 'ios' || testUa(/mobile/g)) {
-      platform = 'mobile' // 移动端
-    }
+    // let platform = 'unknow'
+    // if (system === 'windows' || system === 'macos' || system === 'linux') {
+    //   platform = 'pc' // 桌面端
+    // } else if (system === 'android' || system === 'ios' || testUa(/mobile/g)) {
+    //   platform = 'mobile' // 移动端
+    // }
 
     // 内核+载体
     let engine = 'unknow'
@@ -239,34 +283,34 @@ export class WonderStatistic {
     }
 
     // 内核版本
-    let engineVs = 'unknow'
-    if (engine === 'webkit') {
-      engineVs = testVs(/applewebkit\/[\d._]+/g)
-    } else if (engine === 'gecko') {
-      engineVs = testVs(/gecko\/[\d._]+/g)
-    } else if (engine === 'presto') {
-      engineVs = testVs(/presto\/[\d._]+/g)
-    } else if (engine === 'trident') {
-      engineVs = testVs(/trident\/[\d._]+/g)
-    }
+    // let engineVs = 'unknow'
+    // if (engine === 'webkit') {
+    //   engineVs = testVs(/applewebkit\/[\d._]+/g)
+    // } else if (engine === 'gecko') {
+    //   engineVs = testVs(/gecko\/[\d._]+/g)
+    // } else if (engine === 'presto') {
+    //   engineVs = testVs(/presto\/[\d._]+/g)
+    // } else if (engine === 'trident') {
+    //   engineVs = testVs(/trident\/[\d._]+/g)
+    // }
 
     // 载体版本
     let supporterVs = 'unknow'
-    if (supporter === 'chrome') {
-      supporterVs = testVs(/chrome\/[\d._]+/g)
-    } else if (supporter === 'safari') {
-      supporterVs = testVs(/version\/[\d._]+/g)
-    } else if (supporter === 'firefox') {
-      supporterVs = testVs(/firefox\/[\d._]+/g)
-    } else if (supporter === 'opera') {
-      supporterVs = testVs(/opr\/[\d._]+/g)
-    } else if (supporter === 'iexplore') {
-      supporterVs = testVs(/(msie [\d._]+)|(rv:[\d._]+)/g)
-    } else if (supporter === 'edge') {
-      supporterVs = testVs(/edge\/[\d._]+/g)
-    } else if (supporter === 'edge-chrome') {
-      supporterVs = testVs(/edg\/[\d._]+/g)
-    }
+    // if (supporter === 'chrome') {
+    //   supporterVs = testVs(/chrome\/[\d._]+/g)
+    // } else if (supporter === 'safari') {
+    //   supporterVs = testVs(/version\/[\d._]+/g)
+    // } else if (supporter === 'firefox') {
+    //   supporterVs = testVs(/firefox\/[\d._]+/g)
+    // } else if (supporter === 'opera') {
+    //   supporterVs = testVs(/opr\/[\d._]+/g)
+    // } else if (supporter === 'iexplore') {
+    //   supporterVs = testVs(/(msie [\d._]+)|(rv:[\d._]+)/g)
+    // } else if (supporter === 'edge') {
+    //   supporterVs = testVs(/edge\/[\d._]+/g)
+    // } else if (supporter === 'edge-chrome') {
+    //   supporterVs = testVs(/edg\/[\d._]+/g)
+    // }
 
     if (testUa(/micromessenger/g)) {
       supporter = 'wechat' // 微信浏览器
@@ -294,21 +338,21 @@ export class WonderStatistic {
       supporterVs = testVs(/maxthon\/[\d._]+/g)
     }
 
-    const screen = `${window.screen.width}x${window.screen.height}`
+    // const screen = `${window.screen.width}x${window.screen.height}`
 
     const model = 'none'
 
     // 获取到system、systemVs、platform、engine、engineVs、supporter、supporterVs
     return Object.assign(
       {
-        engine, // webkit gecko presto trident
-        engineVs,
-        platform, // desktop mobile
+        // engine, // webkit gecko presto trident
+        // engineVs,
+        // platform, // desktop mobile
         supporter, // chrome safari firefox opera iexplore edge
-        supporterVs,
+        // supporterVs,
         system, // windows macos linux android ios
         systemVs,
-        screen
+        // screen
       },
       model === 'none'
         ? {}
@@ -389,7 +433,7 @@ export class WonderStatistic {
    * @param name 事件名
    * @param data 数据
    */
-  event(typeName, data) {
-    this.send({ ...this._options, typeName, eventInfo: data })
+  event(eventType, data) {
+    this.send({ ...this._options, eventType, eventInfo: data })
   }
 }
