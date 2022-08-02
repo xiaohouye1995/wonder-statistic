@@ -52,7 +52,7 @@ window.webtracing.event(name, optionsObj)
   "eventInfo": {}, // 自定义事件对象
   "pageTimeSrc": "", // 停留页面
   "pageTime": "", // 停留时间
-  "eventType":"", // 事件名
-  "token": "" // 登录用户标识
+  "eventType":"", // 事件名 pv：页面访问量，loginSuccess：登录成功，pageBack：返回上一级，pageOut：登出
+  "userId": "" // 登录用户id
 }
 ```

@@ -21,15 +21,13 @@ export class WonderStatistic {
       appName: options.appName || '',
       eventType: '',
       distinctId: this.browserId,
-      pagePath: window.location.pathname,
+      pagePath: window.location.pathname || '',
       region: '',
       city: '',
+      pageTimeSrc: '',
+      pageTime: '',
+      userId: localStorage.getItem('wonderStatisticUserId') || null,
       // deviceInfo: { ...this.getDeviceInfo() },
-      pageTimeSrc: localStorage.getItem('wonderStatisticPageUrl') || '',
-      pageTime: this.calculateTheStayTime(),
-      // pageTimeSrc: '',
-      // pageTime: '',
-      token: localStorage.getItem('wonderStatisticToken') || '',
       ...this.getDeviceInfo()
     }
     this.eventCenter = options.eventCenter || ''
@@ -41,9 +39,9 @@ export class WonderStatistic {
     this.getPageTime()
   }
   // 服务端用户登录
-  login(token) {
-    this._options.token = token
-    localStorage.setItem('wonderStatisticToken',token)
+  login(id) {
+    this._options.userId = id
+    localStorage.setItem('wonderStatisticUserId',id)
     this.event('loginSuccess')
   }
   // 监听路由初始化
@@ -91,13 +89,13 @@ export class WonderStatistic {
     return ''
   }
   // 计算停留时间
-  calculateTheStayTime() {
-    const time = localStorage.getItem('wonderStatisticTime')
-    if (time) {
-      return new Date().getTime() - Number(time)
-    }
-    return ''
-  }
+  // calculateTheStayTime() {
+  //   const time = localStorage.getItem('wonderStatisticTime')
+  //   if (time) {
+  //     return new Date().getTime() - Number(time)
+  //   }
+  //   return ''
+  // }
   // 获取页面退出
   getPageOut() {
     const now = new Date().getTime()
@@ -112,8 +110,8 @@ export class WonderStatistic {
       const url = localStorage.getItem('wonderStatisticPageUrl') || ''
       this.send({ ...this._options, eventType: 'pageOut', pagePath: url })
       localStorage.setItem('wonderStatisticSource', '')
-      localStorage.setItem('wonderStatisticTime', '')
-      localStorage.setItem('wonderStatisticPageUrl', '')
+      // localStorage.setItem('wonderStatisticTime', '')
+      // localStorage.setItem('wonderStatisticPageUrl', '')
     }
   }
   // 获取页面返回上一页
@@ -125,27 +123,25 @@ export class WonderStatistic {
   }
   // 获取页面停留时长
   getPageTime() {
-    // let tempTime = new Date().getTime()
-    let tempTime = localStorage.getItem('wonderStatisticTime')
-    if (!tempTime) {
-      tempTime = new Date().getTime()
-      localStorage.setItem('wonderStatisticTime', new Date().getTime())
-    }
-    let pageUrl = '/'
+    let tempTime = localStorage.getItem('wonderStatisticTime') || new Date().getTime()
+    let pageUrl = localStorage.getItem('wonderStatisticPageUrl') || document.location.pathname || ''
     const setStayTimeEvent = (name, path) => {
       let timeDiff = new Date().getTime() - tempTime
       tempTime = new Date().getTime()
-      localStorage.setItem('wonderStatisticTime', new Date().getTime())
-      // console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
+      this._options.pageTime = String(timeDiff)
+      console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       pageUrl = path || document.location.pathname
+      localStorage.setItem('wonderStatisticTime', tempTime)
       localStorage.setItem('wonderStatisticPageUrl', pageUrl)
-      this._options.pageTime = String(timeDiff)
       this.routingJump(pageUrl)
     }
     // 页面刷新或退出时上次停留时长
     window.onunload = () => {
       setStayTimeEvent('onunload')
+      // 清空停留时长和停留页面
+      localStorage.setItem('wonderStatisticTime', '')
+      localStorage.setItem('wonderStatisticPageUrl', '')
       // 记录离开时间，用以区分刷新和退出
       localStorage.setItem('wonderStatisticLeaveTime', new Date().getTime())
     }
