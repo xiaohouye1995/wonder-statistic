@@ -127,6 +127,10 @@ export class WonderStatistic {
     let pageUrl = localStorage.getItem('wonderStatisticPageUrl') || document.location.pathname || ''
     const setStayTimeEvent = (name, path) => {
       let timeDiff = new Date().getTime() - tempTime
+      const dayMs = 24 * 60 * 60 * 1000
+      if (timeDiff > dayMs) {
+        timeDiff = dayMs
+      }
       tempTime = new Date().getTime()
       this._options.pageTime = String(timeDiff)
       console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
