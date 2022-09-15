@@ -107,7 +107,7 @@ export class WonderStatistic {
     // 判断是否为退出，两次间隔大于5s判定为退出操作
     const isOut = now - leaveTime > 5000
     if (isOut) {
-      const url = localStorage.getItem('wonderStatisticPageUrl') || ''
+      const url = localStorage.getItem('wonderStatisticPageUrl') || window.location.pathname || ''
       this.send({ ...this._options, eventType: 'pageOut', pagePath: url })
       localStorage.setItem('wonderStatisticSource', '')
       // localStorage.setItem('wonderStatisticTime', '')
@@ -117,14 +117,14 @@ export class WonderStatistic {
   // 获取页面返回上一页
   getPageBack() {
     window.addEventListener('popstate', () => {
-      const url = localStorage.getItem('wonderStatisticPageUrl') || ''
+      const url = localStorage.getItem('wonderStatisticPageUrl') || window.location.pathname || ''
       this.send({ ...this._options, eventType: 'pageBack', pagePath: url })
     })
   }
   // 获取页面停留时长
   getPageTime() {
     let tempTime = localStorage.getItem('wonderStatisticTime') || new Date().getTime()
-    let pageUrl = localStorage.getItem('wonderStatisticPageUrl') || document.location.pathname || ''
+    let pageUrl = localStorage.getItem('wonderStatisticPageUrl') || window.location.pathname || ''
     const setStayTimeEvent = (name, path) => {
       let timeDiff = new Date().getTime() - tempTime
       const dayMs = 24 * 60 * 60 * 1000
@@ -135,7 +135,7 @@ export class WonderStatistic {
       this._options.pageTime = String(timeDiff)
       console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
-      pageUrl = path || document.location.pathname
+      pageUrl = path || window.location.pathname
       localStorage.setItem('wonderStatisticTime', tempTime)
       localStorage.setItem('wonderStatisticPageUrl', pageUrl)
       this.routingJump(pageUrl)
