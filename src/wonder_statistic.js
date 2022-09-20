@@ -32,7 +32,7 @@ export class WonderStatistic {
     }
     this.eventCenter = options.eventCenter || ''
     this.appType = options.appType || ''
-    this.getPageOut()
+    // this.getPageOut()
     this.getPageSource()
     this.getLocation()
     this.getPageBack()
@@ -73,8 +73,6 @@ export class WonderStatistic {
       this._options.source = this.getQueryVariable('source') || document.referrer || '直接打开'
       localStorage.setItem('wonderStatisticSource', this._options.source)
     }
-    // const source = this.getQueryVariable('source') || document.referrer
-    // this._options.source = source || '直接打开'
   }
   // 获取url参数
   getQueryVariable(variable) {
@@ -88,14 +86,6 @@ export class WonderStatistic {
     }
     return ''
   }
-  // 计算停留时间
-  // calculateTheStayTime() {
-  //   const time = localStorage.getItem('wonderStatisticTime')
-  //   if (time) {
-  //     return new Date().getTime() - Number(time)
-  //   }
-  //   return ''
-  // }
   // 获取页面退出
   getPageOut() {
     const now = new Date().getTime()
@@ -131,11 +121,11 @@ export class WonderStatistic {
       if (timeDiff > dayMs) {
         timeDiff = dayMs
       }
-      tempTime = new Date().getTime()
       this._options.pageTime = String(timeDiff)
       console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       pageUrl = path || window.location.pathname
+      tempTime = new Date().getTime()
       localStorage.setItem('wonderStatisticTime', tempTime)
       localStorage.setItem('wonderStatisticPageUrl', pageUrl)
       this.routingJump(pageUrl)
@@ -180,18 +170,14 @@ export class WonderStatistic {
         return
       }
       const location = JSON.parse(xhr.responseText)
-      // console.log('location', location)
-      // this._options.location = {
-      //   country: location.country,
-      //   region: location.region,
-      //   city: location.city
-      // }
       this._options.region = location.region
       this._options.city = location.city
       this.event('pv')
+      this.getPageOut()
     }
     xhr.onerror = () => {
       this.event('pv')
+      this.getPageOut()
     }
   }
   // 获取设备信息
