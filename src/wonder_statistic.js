@@ -15,7 +15,7 @@ export class WonderStatistic {
    * @param appName 应用名
    */
   init(options = {}) {
-    console.log('初始化参数：', options)
+    // console.log('初始化参数：', options)
     this.requestUrl = options.requestUrl || ''
     this._options = {
       appName: options.appName || '',
@@ -122,7 +122,7 @@ export class WonderStatistic {
         timeDiff = dayMs
       }
       this._options.pageTime = String(timeDiff)
-      console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
+      // console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       pageUrl = path || window.location.pathname
       tempTime = new Date().getTime()
@@ -183,7 +183,7 @@ export class WonderStatistic {
   // 获取设备信息
   getDeviceInfo() {
     const ua = navigator.userAgent.toLowerCase()
-    console.log('ua', ua)
+    // console.log('ua', ua)
     const testUa = (regexp) => regexp.test(ua)
     const testVs = (regexp) =>
       ua
