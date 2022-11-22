@@ -24,6 +24,7 @@ export class WonderStatistic {
       pagePath: window.location.pathname || '',
       region: '',
       city: '',
+      ipAddress: '',
       pageTimeSrc: '',
       pageTime: '',
       userId: localStorage.getItem('wonderStatisticUserId') || null,
@@ -172,6 +173,7 @@ export class WonderStatistic {
       const location = JSON.parse(xhr.responseText)
       this._options.region = location.region
       this._options.city = location.city
+      this._options.ipAddress = location.ip
       this.event('pv')
       this.getPageOut()
     }
