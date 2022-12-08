@@ -40,10 +40,10 @@ export class WonderStatistic {
     this.getPageTime()
   }
   // 服务端用户登录
-  login(id) {
+  login(id, eventInfo) {
     this._options.userId = id
     localStorage.setItem('wonderStatisticUserId',id)
-    this.event('loginSuccess')
+    this.event('loginSuccess', eventInfo)
   }
   // 监听路由初始化
   routerInit() {
