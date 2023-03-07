@@ -22,9 +22,9 @@ export class WonderStatistic {
       eventType: '',
       distinctId: this.browserId,
       pagePath: window.location.pathname || '',
-      region: '',
-      city: '',
-      ipAddress: '',
+      // region: '',
+      // city: '',
+      // ipAddress: '',
       pageTimeSrc: '',
       pageTime: '',
       userId: localStorage.getItem('wonderStatisticUserId') || null,
@@ -33,16 +33,17 @@ export class WonderStatistic {
     }
     this.eventCenter = options.eventCenter || ''
     this.appType = options.appType || ''
-    // this.getPageOut()
     this.getPageSource()
-    this.getLocation()
+    // this.getLocation()
     this.getPageBack()
     this.getPageTime()
+    this.event('pv')
+    this.getPageOut()
   }
   // 服务端用户登录
   login(id, eventInfo) {
     this._options.userId = id
-    localStorage.setItem('wonderStatisticUserId',id)
+    localStorage.setItem('wonderStatisticUserId', id)
     this.event('loginSuccess', eventInfo)
   }
   // 监听路由初始化
@@ -142,7 +143,7 @@ export class WonderStatistic {
     }
     if (this.appType === 'taro') {
       this.eventCenter.on('__taroRouterChange', ({ toLocation: { path } }) => {
-        if (this._options.city) {
+        if (this._options.userId) {
           setStayTimeEvent('__taroRouterChange', path)
         }
       })
@@ -158,30 +159,30 @@ export class WonderStatistic {
     }
   }
   // 获取定位信息
-  getLocation() {
-    // navigator.geolocation.getCurrentPosition((res) => {
-    //   console.log(res);//这里会返回经纬度，然后还要通过经纬度转换地区名称
-    // });
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', 'https://get.geojs.io/v1/ip/geo.json')
-    xhr.send(null)
-    xhr.onload = () => {
-      if (xhr.status !== 200) {
-        this.event('pv')
-        return
-      }
-      const location = JSON.parse(xhr.responseText)
-      this._options.region = location.region
-      this._options.city = location.city
-      this._options.ipAddress = location.ip
-      this.event('pv')
-      this.getPageOut()
-    }
-    xhr.onerror = () => {
-      this.event('pv')
-      this.getPageOut()
-    }
-  }
+  // getLocation() {
+  //   // navigator.geolocation.getCurrentPosition((res) => {
+  //   //   console.log(res);//这里会返回经纬度，然后还要通过经纬度转换地区名称
+  //   // });
+  //   var xhr = new XMLHttpRequest()
+  //   xhr.open('GET', 'https://get.geojs.io/v1/ip/geo.json')
+  //   xhr.send(null)
+  //   xhr.onload = () => {
+  //     if (xhr.status !== 200) {
+  //       this.event('pv')
+  //       return
+  //     }
+  //     const location = JSON.parse(xhr.responseText)
+  //     this._options.region = location.region
+  //     this._options.city = location.city
+  //     this._options.ipAddress = location.ip
+  //     this.event('pv')
+  //     this.getPageOut()
+  //   }
+  //   xhr.onerror = () => {
+  //     this.event('pv')
+  //     this.getPageOut()
+  //   }
+  // }
   // 获取设备信息
   getDeviceInfo() {
     const ua = navigator.userAgent.toLowerCase()
