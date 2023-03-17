@@ -28,6 +28,7 @@ export class WonderStatistic {
       pageTimeSrc: '',
       pageTime: '',
       userId: localStorage.getItem('wonderStatisticUserId') || null,
+      groupInfo: JSON.parse(localStorage.getItem('wonderStatisticGroupInfo')) || null,
       // deviceInfo: { ...this.getDeviceInfo() },
       ...this.getDeviceInfo()
     }
@@ -41,10 +42,16 @@ export class WonderStatistic {
     this.getPageOut()
   }
   // 服务端用户登录
-  login(id, eventInfo) {
+  login(id, groupInfo) {
     this._options.userId = id
     localStorage.setItem('wonderStatisticUserId', id)
-    this.event('loginSuccess', eventInfo)
+    this.setGroupInfo(groupInfo)
+    this.event('loginSuccess')
+  }
+  // 设置集团信息
+  setGroupInfo(groupInfo) {
+    this._options.groupInfo = {...groupInfo}
+    localStorage.setItem('wonderStatisticGroupInfo', JSON.stringify(groupInfo))
   }
   // 监听路由初始化
   routerInit() {
