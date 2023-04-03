@@ -42,11 +42,11 @@ export class WonderStatistic {
     this.getPageOut()
   }
   // 服务端用户登录
-  login(id, groupInfo) {
+  login(id, groupInfo, name) {
     this._options.userId = id
     localStorage.setItem('wonderStatisticUserId', id)
     this.setGroupInfo(groupInfo)
-    this.event('loginSuccess')
+    this.event(name || 'loginSuccess')
   }
   // 设置集团信息
   setGroupInfo(groupInfo) {
@@ -150,7 +150,7 @@ export class WonderStatistic {
     }
     if (this.appType === 'taro') {
       this.eventCenter.on('__taroRouterChange', ({ toLocation: { path } }) => {
-        if (this._options.userId) {
+        if (this._options.distinctId) {
           setStayTimeEvent('__taroRouterChange', path)
         }
       })
