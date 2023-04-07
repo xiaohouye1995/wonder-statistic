@@ -133,7 +133,8 @@ export class WonderStatistic {
       this._options.pageTime = String(timeDiff)
       // console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
-      pageUrl = path || this.getUrl()
+      // pageUrl = path || this.getUrl()
+      pageUrl = this.getUrl()
       tempTime = new Date().getTime()
       localStorage.setItem('wonderStatisticTime', tempTime)
       localStorage.setItem('wonderStatisticPageUrl', pageUrl)
