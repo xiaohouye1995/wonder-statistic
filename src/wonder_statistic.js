@@ -7,6 +7,7 @@ export class WonderStatistic {
       this.browserId = this.uuid()
       localStorage.setItem('wonderStatisticBrowserId', this.browserId)
     }
+    this.previous = 0
     this.routerInit()
   }
   /**
@@ -15,30 +16,23 @@ export class WonderStatistic {
    * @param appName 应用名
    */
   init(options = {}) {
-    // console.log('初始化参数：', options)
     this.requestUrl = options.requestUrl || ''
     this._options = {
       appName: options.appName || '',
       eventType: '',
       distinctId: this.browserId,
       pagePath: this.getUrl(),
-      // region: '',
-      // city: '',
-      // ipAddress: '',
       pageTimeSrc: '',
       pageTime: '',
       userId: localStorage.getItem('wonderStatisticUserId') || null,
       groupInfo: JSON.parse(localStorage.getItem('wonderStatisticGroupInfo')) || null,
-      // deviceInfo: { ...this.getDeviceInfo() },
       ...this.getDeviceInfo()
     }
     this.eventCenter = options.eventCenter || ''
     this.appType = options.appType || ''
     this.getPageSource()
-    // this.getLocation()
     this.getPageBack()
     this.getPageTime()
-    this.event('pv')
     this.getPageOut()
   }
   // 服务端用户登录
@@ -46,11 +40,11 @@ export class WonderStatistic {
     this._options.userId = id
     localStorage.setItem('wonderStatisticUserId', id)
     this.setGroupInfo(groupInfo)
-    this.event(name || 'loginSuccess')
+    this.send({ ...this._options, eventType: name || 'loginSuccess' })
   }
   // 设置集团信息
   setGroupInfo(groupInfo) {
-    this._options.groupInfo = {...groupInfo}
+    this._options.groupInfo = { ...groupInfo }
     localStorage.setItem('wonderStatisticGroupInfo', JSON.stringify(groupInfo))
   }
   // 监听路由初始化
@@ -109,8 +103,6 @@ export class WonderStatistic {
       const url = localStorage.getItem('wonderStatisticPageUrl') || this.getUrl()
       this.send({ ...this._options, eventType: 'pageOut', pagePath: url })
       localStorage.setItem('wonderStatisticSource', '')
-      // localStorage.setItem('wonderStatisticTime', '')
-      // localStorage.setItem('wonderStatisticPageUrl', '')
     }
   }
   // 获取页面返回上一页
@@ -131,7 +123,6 @@ export class WonderStatistic {
         timeDiff = dayMs
       }
       this._options.pageTime = String(timeDiff)
-      // console.log(`'${pageUrl}'页面停留时长${name}： ${timeDiff}ms`)
       this._options.pageTimeSrc = pageUrl
       // pageUrl = path || this.getUrl()
       pageUrl = this.getUrl()
@@ -151,11 +142,10 @@ export class WonderStatistic {
     }
     if (this.appType === 'taro') {
       this.eventCenter.on('__taroRouterChange', ({ toLocation: { path } }) => {
-        if (this._options.distinctId) {
-          setStayTimeEvent('__taroRouterChange', path)
-        }
+        setStayTimeEvent('__taroRouterChange', path)
       })
     } else {
+      this.send({ ...this._options, eventType: 'pv' })
       // 监听页面后退
       window.addEventListener('popstate', () => {
         setStayTimeEvent('popstate')
@@ -176,25 +166,25 @@ export class WonderStatistic {
   //   xhr.send(null)
   //   xhr.onload = () => {
   //     if (xhr.status !== 200) {
-  //       this.event('pv')
+  //       this.send({ ...this._options, eventType: 'pv'})
   //       return
   //     }
   //     const location = JSON.parse(xhr.responseText)
   //     this._options.region = location.region
   //     this._options.city = location.city
   //     this._options.ipAddress = location.ip
-  //     this.event('pv')
+  //     this.send({ ...this._options, eventType: 'pv'})
   //     this.getPageOut()
   //   }
   //   xhr.onerror = () => {
-  //     this.event('pv')
+  //     this.send({ ...this._options, eventType: 'pv'})
   //     this.getPageOut()
   //   }
   // }
+
   // 获取设备信息
   getDeviceInfo() {
     const ua = navigator.userAgent.toLowerCase()
-    // console.log('ua', ua)
     const testUa = (regexp) => regexp.test(ua)
     const testVs = (regexp) =>
       ua
@@ -361,7 +351,7 @@ export class WonderStatistic {
   // 路由跳转
   routingJump(path) {
     this._options.pagePath = path
-    this.event('pv')
+    this.send({ ...this._options, eventType: 'pv' })
   }
   // 获取一个随机字符串(全局唯一标识符)
   uuid() {
@@ -431,7 +421,12 @@ export class WonderStatistic {
    * @param data 数据
    */
   event(eventType, data) {
-    this.send({ ...this._options, eventType, eventInfo: data })
+    var now = new Date();
+    let delay = 500;
+    if (now - this.previous > delay) {
+      this.send({ ...this._options, eventType, eventInfo: data })
+      this.previous = now;
+    }
   }
   getUrl() {
     let url = window.location.pathname || ''
