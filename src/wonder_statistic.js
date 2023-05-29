@@ -19,6 +19,7 @@ export class WonderStatistic {
     this.requestUrl = options.requestUrl || ''
     this._options = {
       appName: options.appName || '',
+      managerCity: options.managerCity || '',
       eventType: '',
       distinctId: this.browserId,
       pagePath: this.getUrl(),
@@ -26,7 +27,6 @@ export class WonderStatistic {
       pageTime: '',
       userId: localStorage.getItem('wonderStatisticUserId') || null,
       groupInfo: JSON.parse(localStorage.getItem('wonderStatisticGroupInfo')) || null,
-      managerCity: sessionStorage.getItem('wonderStatisticManagerCity') || null,
       ...this.getDeviceInfo()
     }
     this.eventCenter = options.eventCenter || ''
@@ -42,11 +42,6 @@ export class WonderStatistic {
     localStorage.setItem('wonderStatisticUserId', id)
     this.setGroupInfo(groupInfo)
     this.send({ ...this._options, eventType: name || 'loginSuccess' })
-  }
-  // 设置经理推广地市
-  setManagerCity(city) {
-    this._options.managerCity = city
-    sessionStorage.setItem('wonderStatisticManagerCity', city)
   }
   // 设置集团信息
   setGroupInfo(groupInfo) {
