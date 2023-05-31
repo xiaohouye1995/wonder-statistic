@@ -25,8 +25,8 @@ export class WonderStatistic {
       pagePath: this.getUrl(),
       pageTimeSrc: '',
       pageTime: '',
-      userId: localStorage.getItem('wonderStatisticUserId') || null,
-      groupInfo: JSON.parse(localStorage.getItem('wonderStatisticGroupInfo')) || null,
+      userId: options.appName === '智云领航pc' ? localStorage.getItem('wonderStatisticUserIdPC') : sessionStorage.getItem('wonderStatisticUserId'),
+      groupInfo: options.appName === '智云领航pc' ? JSON.parse(localStorage.getItem('wonderStatisticGroupInfoPC')) : JSON.parse(sessionStorage.getItem('wonderStatisticGroupInfo')),
       ...this.getDeviceInfo()
     }
     this.eventCenter = options.eventCenter || ''
@@ -39,14 +39,25 @@ export class WonderStatistic {
   // 服务端用户登录
   login(id, groupInfo, name) {
     this._options.userId = id
-    localStorage.setItem('wonderStatisticUserId', id)
+    sessionStorage.setItem('wonderStatisticUserId', id)
+    localStorage.setItem('wonderStatisticUserIdPC', id)
     this.setGroupInfo(groupInfo)
     this.send({ ...this._options, eventType: name || 'loginSuccess' })
+  }
+  clearlogin() {
+    // console.log()
+    this._options.userId = null
+    this._options.groupInfo = null
+    sessionStorage.setItem('wonderStatisticUserId', null)
+    sessionStorage.setItem('wonderStatisticGroupInfo', null)
+    localStorage.setItem('wonderStatisticUserIdPC', null)
+    localStorage.setItem('wonderStatisticGroupInfoPC', null)
   }
   // 设置集团信息
   setGroupInfo(groupInfo) {
     this._options.groupInfo = { ...groupInfo }
-    localStorage.setItem('wonderStatisticGroupInfo', JSON.stringify(groupInfo))
+    sessionStorage.setItem('wonderStatisticGroupInfo', JSON.stringify(groupInfo))
+    localStorage.setItem('wonderStatisticGroupInfoPC', JSON.stringify(groupInfo))
   }
   // 监听路由初始化
   routerInit() {
