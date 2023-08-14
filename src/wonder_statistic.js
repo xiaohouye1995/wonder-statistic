@@ -20,6 +20,7 @@ export class WonderStatistic {
     this._options = {
       appName: options.appName || '',
       managerCity: options.managerCity || '',
+      shareInfo: options.shareInfo || null,
       eventType: '',
       distinctId: this.browserId,
       pagePath: this.getUrl(),
